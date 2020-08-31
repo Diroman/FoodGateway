@@ -1,0 +1,4 @@
+github.com/go-opencv/go-opencv v0.0.0-20190115070742-a4fe8ec027cc h1:4FHjtvOsr1M3WwN6sRm6Iuvxa9gtu2cwAI/vMXK+7rs=
+github.com/go-opencv/go-opencv v0.0.0-20190115070742-a4fe8ec027cc/go.mod h1:CJDlJ8IGjqEnaJZE1MaUF3eL0EWayFGwM0Eqb6i9l3I=
+github.com/oopsguy/m3u8 v0.0.0-20190630112258-4150e93ec8f4 h1:VvytUbszpyAdKmKvd3LxvrFYFljp0wSmMOQHtIyOAuU=
+github.com/oopsguy/m3u8 v0.0.0-20190630112258-4150e93ec8f4/go.mod h1:crRh84w9dfuOcPGJd/K6Go8JlLUCuumIMAWDg6UrHsg=
