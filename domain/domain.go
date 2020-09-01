@@ -13,7 +13,7 @@ import (
 )
 
 type Counter struct {
-	i int
+	i   int
 	mux sync.Mutex
 }
 
@@ -28,18 +28,35 @@ func (c *Counter) GetIndex() int {
 var counter = Counter{}
 
 type Domain struct {
-	predictor *predict_api.Predictor
+	predictor *predict_api.PredictServer
 }
 
-func NewDomain(predictor *predict_api.Predictor) *Domain {
+func NewDomain(predictor *predict_api.PredictServer) *Domain {
 	return &Domain{predictor: predictor}
 }
 
-func (d *Domain) Predict(body string) (model.HTTPPredictResponse, error) {
-	data, err := base64.StdEncoding.DecodeString(body)
+func (d *Domain) Predict(rq model.HTTPPredictRequest) (model.HTTPPredictResponse, error) {
+	if err := d.saveImage(rq); err != nil {
+		log.Println(fmt.Sprintf("Error to save image: %s", err))
+	}
+
+	request := model.ToGRPCRequest(rq)
+	response, err := d.predictor.Predict(request)
+	httpResponse := model.ToHTTPResponse(response)
+
+	if err != nil {
+		log.Println(fmt.Sprintf("Error to get predict: %s", err))
+		return model.HTTPPredictResponse{}, err
+	}
+
+	return httpResponse, nil
+}
+
+func (d Domain) saveImage(request model.HTTPPredictRequest) error {
+	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
 		log.Printf("Error to decode data: %s\n", err)
-		return model.HTTPPredictResponse{}, err
+		return err
 	}
 
 	i := counter.GetIndex()
@@ -47,9 +64,8 @@ func (d *Domain) Predict(body string) (model.HTTPPredictResponse, error) {
 	err = ioutil.WriteFile(fileName, data, 0644)
 	if err != nil {
 		log.Printf("Error to write file: %s\n", err)
-		return model.HTTPPredictResponse{}, errors.New("Error in model request")
+		return errors.New("Error in model request\n")
 	}
 
-	response := d.predictor.Predict()
-	return response, nil
+	return nil
 }

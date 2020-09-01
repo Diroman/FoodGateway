@@ -1,13 +1,21 @@
 package model
 
 type HTTPPredictRequest struct {
-	data string
+	Data string
+}
+
+type Box struct {
+	Box map[string]float32
+}
+
+type Frame struct {
+	Boxes []Box
 }
 
 type HTTPPredictResponse struct {
-	Response map[string]interface{}
+	Response []Frame
 }
 
-func RequestToPredictRequest() HTTPPredictRequest {
-	return HTTPPredictRequest{}
+func ToHTTPRequest(rq string) HTTPPredictRequest {
+	return HTTPPredictRequest{Data: rq}
 }

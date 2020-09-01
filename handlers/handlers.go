@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"foodGateway/domain"
+	"foodGateway/model"
 	"log"
 	"net/http"
 )
@@ -15,7 +16,6 @@ func NewRouter(domain *domain.Domain) *Router {
 	return &Router{domain: domain}
 }
 
-
 func (r *Router) HomeHandler(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 
@@ -25,7 +25,8 @@ func (r *Router) HomeHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := r.domain.Predict(t)
+	request := model.ToHTTPRequest(t)
+	response, err := r.domain.Predict(request)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -33,7 +34,7 @@ func (r *Router) HomeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response.Response); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Can not transform predict result"))

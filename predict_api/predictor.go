@@ -1,29 +1,39 @@
 package predict_api
 
-import "foodGateway/model"
+import (
+	"context"
+	"foodGateway/grpc_api/api"
+	"google.golang.org/grpc"
+)
 
-type Predictor struct {
-	host string
-	port string
+type PredictServer struct {
+	address string
 }
 
-func NewPredictor(host, port string) *Predictor {
-	return &Predictor{
-		host: host,
-		port: port,
-	}
+func NewPredictServer(address string) *PredictServer {
+	return &PredictServer{address: address}
 }
 
-func (p *Predictor) Predict() model.HTTPPredictResponse {
-	box := [][]int{
-		{100, 100}, {200, 100},
-		{200, 200}, {100, 200},
+func (ps *PredictServer) Predict(request *api.Frames) (*api.Prediction, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+	opts = append(opts, grpc.WithBlock())
+	conn, err := grpc.Dial(ps.address, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := api.NewFoodDetectorClient(conn)
+
+	response, err := client.Predict(context.Background(), request)
+	if err != nil {
+		return nil, err
 	}
 
-	response := map[string]interface{}{
-		"boxes" : box,
-		"labels" : []string{"meat"},
-	}
+	return response, nil
+}
 
-	return model.HTTPPredictResponse{Response: response}
+func (ps *PredictServer) SetClasses(classes *api.Classes) (*api.Classes, error) {
+	return &api.Classes{}, nil
 }

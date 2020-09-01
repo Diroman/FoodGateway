@@ -1,0 +1,26 @@
+syntax = 'proto3';
+
+message Frames{
+  repeated string frames = 1;
+}
+
+message Box {
+  map<string, float> box = 1;
+}
+
+message Frame_boxes {
+  repeated Box boxes = 1;
+}
+
+message Prediction{
+  repeated Frame_boxes result = 1 ;
+}
+
+message Classes{
+  repeated int64 food_classes = 1;
+}
+
+service FoodDetector{
+  rpc predict(Frames) returns (Prediction);
+  rpc set_classes(Classes) returns (Classes);
+}

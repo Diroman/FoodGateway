@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	predictor := predict_api.NewPredictor("127.0.0.1", "8080")
+	predictor := predict_api.NewPredictServer("192.168.0.100:50051")
 	domain := domainSt.NewDomain(predictor)
 	router := handlers.NewRouter(domain)
 
