@@ -2,8 +2,9 @@ package predict_api
 
 import (
 	"context"
-	"foodGateway/grpc_api/api"
 	"google.golang.org/grpc"
+
+	"foodGateway/grpc_api/api"
 )
 
 type PredictServer struct {

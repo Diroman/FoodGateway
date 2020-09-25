@@ -4,12 +4,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"foodGateway/model"
-	"foodGateway/predict_api"
 	"io/ioutil"
 	"log"
 	"path"
 	"sync"
+
+	"foodGateway/grpc_api/api"
+	"foodGateway/model"
+	"foodGateway/predict_api"
 )
 
 type Counter struct {
@@ -29,10 +31,21 @@ var counter = Counter{}
 
 type Domain struct {
 	predictor *predict_api.PredictServer
+	queue chan *model.Task
 }
 
 func NewDomain(predictor *predict_api.PredictServer) *Domain {
-	return &Domain{predictor: predictor}
+	queue := make(chan *model.Task)
+	domain := &Domain{
+		predictor: predictor,
+		queue: queue,
+	}
+
+	for i := 0; i < 5; i++ {
+		go domain.ListenQueue()
+	}
+
+	return domain
 }
 
 func (d *Domain) Predict(rq model.HTTPPredictRequest) (model.HTTPPredictResponse, error) {
@@ -41,18 +54,24 @@ func (d *Domain) Predict(rq model.HTTPPredictRequest) (model.HTTPPredictResponse
 	}
 
 	request := model.ToGRPCRequest(rq)
-	response, err := d.predictor.Predict(request)
+	task := model.Task{
+		Id:     0,
+		Data:   request,
+		Output: make(chan *api.Prediction),
+	}
+	d.queue <- &task
+	response := <- task.Output
 	httpResponse := model.ToHTTPResponse(response)
 
-	if err != nil {
-		log.Println(fmt.Sprintf("Error to get predict: %s", err))
-		return model.HTTPPredictResponse{}, err
-	}
+	//if err != nil {
+	//	log.Println(fmt.Sprintf("Error to get predict: %s", err))
+	//	return model.HTTPPredictResponse{}, err
+	//}
 
 	return httpResponse, nil
 }
 
-func (d Domain) saveImage(request model.HTTPPredictRequest) error {
+func (d *Domain) saveImage(request model.HTTPPredictRequest) error {
 	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
 		log.Printf("Error to decode data: %s\n", err)
@@ -68,4 +87,12 @@ func (d Domain) saveImage(request model.HTTPPredictRequest) error {
 	}
 
 	return nil
+}
+
+func (d *Domain) ListenQueue()  {
+	for {
+		task := <- d.queue
+		response, _ := d.predictor.Predict(task.Data)
+		task.Output <- response
+	}
 }

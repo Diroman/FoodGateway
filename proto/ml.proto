@@ -1,5 +1,11 @@
 syntax = 'proto3';
 
+
+service FoodDetector{
+  rpc predict(Frames) returns (Prediction);
+  rpc set_classes(Classes) returns (Classes);
+}
+
 message Frames{
   repeated string frames = 1;
 }
@@ -18,9 +24,4 @@ message Prediction{
 
 message Classes{
   repeated int64 food_classes = 1;
-}
-
-service FoodDetector{
-  rpc predict(Frames) returns (Prediction);
-  rpc set_classes(Classes) returns (Classes);
 }
